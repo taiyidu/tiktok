@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: gongsheng
+  datasource:
+    url: jdbc:mysql://localhost:3306/your_database?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8
+    username: root
+    password: 200710
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+playwright:
+  browser:
+#    是否开启浏览器开关，因为是在服务器后端，所以不使用浏览器显示
+    headless: true
+
+# 文件上传
+dromara:
+  x-file-storage: #文件存储配置
+    default-platform: aliyun-oss-1 #默认使用的存储平台
+    thumbnail-suffix: ".min.jpg" #缩略图后缀，例如【.min.jpg】【.png】
+    #对应平台的配置写在这里，注意缩进要对齐
+    aliyun-oss:
+      - platform: aliyun-oss-1 # 存储平台标识
+        enable-storage: true  # 启用存储
+        access-key: ${OSS_ACCESS_KEY_ID}
+        secret-key: ${OSS_ACCESS_KEY_SECRET}
+        end-point: oss-cn-beijing.aliyuncs.com
+        bucket-name: taiyidu
+        domain: https://taiyidu.oss-cn-beijing.aliyuncs.com/ # 访问域名，注意“/”结尾，例如：https://abc.oss-cn-shanghai.aliyuncs.com/
+        base-path: taiyidu-gongsheng-videos/ # 基础路径
