@@ -31,7 +31,7 @@ public class videoScraperServiceImpl implements videoScraperService {
 
     @Override
     public GeneralResult videoScraper(HeadRequest headRequest) {
-        // 1. 提取抖音分享短链接
+        // 1. 提取抖音分享短链接 对文件名进行处理
         String shareUrl = SafeFileNameUtils.extractDouyinUrl(headRequest.getUrl());
         if (shareUrl.isEmpty()) {
             log.warn("⚠️ 未从输入中提取到抖音分享链接: {}", headRequest.getUrl());
@@ -155,7 +155,6 @@ public class videoScraperServiceImpl implements videoScraperService {
                         return;
                     }
                     log.error("❌ 解析或下载失败: ", e);
-                    // 出错了也要放行，避免主线程一直等待
                 }
             });
 
