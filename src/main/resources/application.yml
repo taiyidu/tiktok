@@ -2,10 +2,21 @@ spring:
   application:
     name: gongsheng
   datasource:
-    url: jdbc:mysql://localhost:3306/your_database?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8
+    url: jdbc:mysql://localhost:3306/gongsheng?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8
     username: root
     password: 200710
     driver-class-name: com.mysql.cj.jdbc.Driver
+
+server:
+  tomcat:
+    threads: # 限制最大爬虫数量防止服务器的内存扛不住
+      max: 3
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    # 开启自动驼峰转换：下划线 <=> 驼峰
+    map-underscore-to-camel-case: true
 
 playwright:
   browser:

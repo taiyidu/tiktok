@@ -1,4 +1,4 @@
-package com.taiyidu.taiyidu.gongsheng.result;
+package com.taiyidu.taiyidu.gongsheng.pojo.vo;
 import lombok.Data;
 
 import java.util.List;

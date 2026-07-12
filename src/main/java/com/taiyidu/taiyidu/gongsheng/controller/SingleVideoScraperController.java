@@ -2,7 +2,7 @@ package com.taiyidu.taiyidu.gongsheng.controller;
 
 import com.taiyidu.taiyidu.gongsheng.result.HeadRequest;
 import com.taiyidu.taiyidu.gongsheng.result.Result;
-import com.taiyidu.taiyidu.gongsheng.result.GeneralResult;
+import com.taiyidu.taiyidu.gongsheng.pojo.vo.GeneralResult;
 import com.taiyidu.taiyidu.gongsheng.service.videoScraperService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/scraper/douyin/tasks")
 @Slf4j
-public class SingleVideoScraper{
+public class SingleVideoScraperController {
     @Autowired
     private videoScraperService videoScraperService;
     /**

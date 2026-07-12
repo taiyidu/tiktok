@@ -12,7 +12,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class LogDownload {
     
-    private Long id;                  // 自增主键
     private String awemeId;           // 作品唯一ID
     private String title;             // 作品文案描述
     private Integer mediaType;        // 作品类型: 1-图集, 2-视频

@@ -5,30 +5,38 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.microsoft.playwright.*;
 import com.taiyidu.taiyidu.gongsheng.config.PlaywrightConfig;
+import com.taiyidu.taiyidu.gongsheng.mapper.videoScraperMapper;
+import com.taiyidu.taiyidu.gongsheng.pojo.entity.LogDownload;
 import com.taiyidu.taiyidu.gongsheng.result.HeadRequest;
-import com.taiyidu.taiyidu.gongsheng.result.GeneralResult;
+import com.taiyidu.taiyidu.gongsheng.pojo.vo.GeneralResult;
 import com.taiyidu.taiyidu.gongsheng.service.videoScraperService;
+import com.taiyidu.taiyidu.gongsheng.utils.InformationProcessing;
 import com.taiyidu.taiyidu.gongsheng.utils.SafeFileNameUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.dromara.x.file.storage.core.FileStorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 
 @Slf4j
 @Service
 public class videoScraperServiceImpl implements videoScraperService {
+    //浏览器的驱动基底程序以及启动程序
     @Autowired
     private PlaywrightConfig playwrightConfig;
-
+    //集成阿里云服务的程序基底
     @Autowired
     private FileStorageService fileStorageService;
-
+    @Autowired
+    private videoScraperMapper videoScraperMapper;
     @Override
     public GeneralResult videoScraper(HeadRequest headRequest) {
         // 1. 提取抖音分享短链接 对文件名进行处理
@@ -93,55 +101,51 @@ public class videoScraperServiceImpl implements videoScraperService {
                         log.info("==================================================");
 
                         if (!"未找到".equals(downloadUrl)) {
-                            log.info("📥 尝试上传视频...");
+                            log.info("📥 尝试流式下载上传视频...");
 
-                            Map<String, String> extraHeaders = new HashMap<>();
-                            extraHeaders.put("Referer", "https://www.douyin.com/");
-                            extraHeaders.put("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-                            APIRequestContext requestContext = null;
+                            HttpClient httpClient = HttpClient.newBuilder()
+                                    .followRedirects(HttpClient.Redirect.NORMAL)
+                                    .build();
 
-                            try {
-                                requestContext = playwright.request().newContext(
-                                        new APIRequest.NewContextOptions()
-                                                .setExtraHTTPHeaders(extraHeaders)
-                                );
+                            HttpRequest videoRequest = HttpRequest.newBuilder()
+                                    .uri(URI.create(downloadUrl))
+                                    .header("Referer", "https://www.douyin.com/")
+                                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                                    .GET()
+                                    .build();
 
-                                APIResponse videoResponse = requestContext.get(downloadUrl);
-                                //上传视频的代码
-                                if (videoResponse.status() == 200) {
-                                    byte[] videoBytes = videoResponse.body();
+                            HttpResponse<InputStream> videoResponse = httpClient.send(videoRequest, HttpResponse.BodyHandlers.ofInputStream());
 
-                                    // 清理文案中的非法特殊字符，防止作为文件名时系统报错
-                                    String safeTitle = desc.replaceAll("[\\\\/:*?\"<>|\\r\\n]", "").trim();
-                                    if (safeTitle.isEmpty()) {
-                                        safeTitle = awemeId;
-                                    }
-                                    // 限制文件名长度，防止过长报错
-                                    if (safeTitle.length() > 50) {
-                                        safeTitle = safeTitle.substring(0, 50);
-                                    }
+                            if (videoResponse.statusCode() == 200) {
+                                InputStream videoStream = videoResponse.body();
 
-                                    String fileName = safeTitle + ".mp4";
-                                    String objectName = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "/";
+                                InformationProcessing information = InformationProcessing.getInformation(desc, awemeId);
+                                String fileName = information.getFileName();
+                                String objectName = information.getObjectName();
 
-                                    FileInfo fileInfo = fileStorageService
-                                            .of(videoBytes)
-                                            .setOriginalFilename(fileName)
-                                            .setPath(objectName)
-                                            .upload();
+                                FileInfo fileInfo = fileStorageService
+                                        .of(videoStream)
+                                        .setOriginalFilename(fileName)
+                                        .setPath(objectName)
+                                        .upload();
 
-                                    log.info("🎉 [上传成功] OSS 地址: " + fileInfo.getUrl());
-                                    generalResult.setAuthor(authorName);
-                                    generalResult.setDesc(desc);
-                                    generalResult.setType("VIDEO");
-                                    generalResult.setDownloadUrl(fileInfo.getUrl());
-                                } else {
-                                    log.info("❌ 下载失败，抖音 CDN 节点返回状态码: " + videoResponse.status());
-                                }
-                            } finally {
-                                if (requestContext != null) {
-                                    requestContext.dispose();
-                                }
+                                log.info("🎉 [上传成功] OSS 地址: " + fileInfo.getUrl());
+                                generalResult.setAuthor(authorName);
+                                generalResult.setDesc(desc);
+                                generalResult.setType("VIDEO");
+                                generalResult.setDownloadUrl(fileInfo.getUrl());
+                                videoScraperMapper.insert(LogDownload.builder()
+                                        .awemeId(awemeId)
+                                        .title(desc)
+                                        .mediaType(2)
+                                        .originUrl(shareUrl)
+                                        .downloadUrls(fileInfo.getUrl())
+                                        .parseStatus(1)
+                                        .errorMsg(null)
+                                        .createTime(LocalDateTime.now())
+                                        .build());
+                            } else {
+                                log.info("❌ 下载失败，抖音 CDN 节点返回状态码: " + videoResponse.statusCode());
                             }
                         }
                     } else {
