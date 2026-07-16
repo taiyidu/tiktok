@@ -2,14 +2,14 @@ package com.taiyidu.taiyidu.gongsheng.controller;
 
 import com.taiyidu.taiyidu.gongsheng.result.HeadRequest;
 import com.taiyidu.taiyidu.gongsheng.result.Result;
-import com.taiyidu.taiyidu.gongsheng.pojo.vo.GeneralResult;
+import com.taiyidu.taiyidu.gongsheng.pojo.vo.GeneralResultVo;
 import com.taiyidu.taiyidu.gongsheng.service.videoScraperService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/scraper/douyin/tasks")
+@RequestMapping("/api/v1/scraper/douyin")
 @Slf4j
 public class SingleVideoScraperController {
     @Autowired
@@ -17,10 +17,14 @@ public class SingleVideoScraperController {
     /**
      * 视频响应接口
      */
-    @PostMapping
+    @PostMapping("/tasks")
     public Result videoScraper(@RequestBody HeadRequest headRequest){
         log.info("[视频解析接口] 正在解析视频... 链接:{}",headRequest.getUrl());
-        GeneralResult generalResult = videoScraperService.videoScraper(headRequest);
+        GeneralResultVo generalResult = videoScraperService.videoScraper(headRequest);
         return Result.success(generalResult);
+    }
+    @GetMapping("/history")
+    public Result history(){
+        return Result.success(videoScraperService.showHistory());
     }
 }

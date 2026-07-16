@@ -38,3 +38,9 @@ dromara:
         bucket-name: taiyidu
         domain: https://taiyidu.oss-cn-beijing.aliyuncs.com/ # 访问域名，注意“/”结尾，例如：https://abc.oss-cn-shanghai.aliyuncs.com/
         base-path: taiyidu-gongsheng-videos/ # 基础路径
+
+gongsheng:
+  jwt:
+    admin-secret-key: taiyidu-gongsheng-jwt-secret-key-2026
+    admin-ttl: 7200000
+    admin-token-name: Authorization

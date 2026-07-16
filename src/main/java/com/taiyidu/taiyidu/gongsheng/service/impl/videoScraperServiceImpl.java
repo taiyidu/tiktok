@@ -5,13 +5,19 @@ import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
 import com.microsoft.playwright.*;
 import com.taiyidu.taiyidu.gongsheng.config.PlaywrightConfig;
-import com.taiyidu.taiyidu.gongsheng.mapper.videoScraperMapper;
+import com.taiyidu.taiyidu.gongsheng.context.BaseContext;
+import com.taiyidu.taiyidu.gongsheng.exception.BaseException;
+import com.taiyidu.taiyidu.gongsheng.mapper.LogDownloadMapper;
+import com.taiyidu.taiyidu.gongsheng.mapper.UserMapper;
 import com.taiyidu.taiyidu.gongsheng.pojo.entity.LogDownload;
+import com.taiyidu.taiyidu.gongsheng.pojo.entity.User;
+import com.taiyidu.taiyidu.gongsheng.pojo.vo.HistoryRecordVo;
 import com.taiyidu.taiyidu.gongsheng.result.HeadRequest;
-import com.taiyidu.taiyidu.gongsheng.pojo.vo.GeneralResult;
+import com.taiyidu.taiyidu.gongsheng.pojo.vo.GeneralResultVo;
 import com.taiyidu.taiyidu.gongsheng.service.videoScraperService;
 import com.taiyidu.taiyidu.gongsheng.utils.InformationProcessing;
 import com.taiyidu.taiyidu.gongsheng.utils.SafeFileNameUtils;
+import constant.MessageConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.dromara.x.file.storage.core.FileInfo;
 import org.dromara.x.file.storage.core.FileStorageService;
@@ -23,6 +29,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 
@@ -36,17 +43,27 @@ public class videoScraperServiceImpl implements videoScraperService {
     @Autowired
     private FileStorageService fileStorageService;
     @Autowired
-    private videoScraperMapper videoScraperMapper;
+    private LogDownloadMapper logDownloadMapper;
+    @Autowired
+    private UserMapper userMapper;
     @Override
-    public GeneralResult videoScraper(HeadRequest headRequest) {
+    public GeneralResultVo videoScraper(HeadRequest headRequest) {
+
+        User user = userMapper.getById(BaseContext.getCurrentId());
+        if(user.getRemain() <= 0){
+            throw new BaseException("解析次数不够喽");
+        }
+        userMapper.updateUser(User.builder().id(user.getId()).remain(user.getRemain() - 1).build());
+
+
         // 1. 提取抖音分享短链接 对文件名进行处理
         String shareUrl = SafeFileNameUtils.extractDouyinUrl(headRequest.getUrl());
         if (shareUrl.isEmpty()) {
             log.warn("⚠️ 未从输入中提取到抖音分享链接: {}", headRequest.getUrl());
-            return new GeneralResult();
+            return new GeneralResultVo();
         }
         log.info("🕵️‍♂️ 启动抖音资源抓取模式...");
-        GeneralResult generalResult = new GeneralResult();
+        GeneralResultVo generalResult = new GeneralResultVo();
         BrowserContext context = null;
         Page page = null;
         // 确保只有一个回调处理数据，避免重复处理
@@ -134,7 +151,7 @@ public class videoScraperServiceImpl implements videoScraperService {
                                 generalResult.setDesc(desc);
                                 generalResult.setType("VIDEO");
                                 generalResult.setDownloadUrl(fileInfo.getUrl());
-                                videoScraperMapper.insert(LogDownload.builder()
+                                logDownloadMapper.insert(LogDownload.builder()
                                         .awemeId(awemeId)
                                         .title(desc)
                                         .mediaType(2)
@@ -180,5 +197,9 @@ public class videoScraperServiceImpl implements videoScraperService {
             }
         }
         return generalResult;
+    }
+    @Override
+    public List<HistoryRecordVo> showHistory() {
+        return logDownloadMapper.showHistory();
     }
 }

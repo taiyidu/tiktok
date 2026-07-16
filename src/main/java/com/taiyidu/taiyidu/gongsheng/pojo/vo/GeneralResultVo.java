@@ -4,7 +4,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class GeneralResult {
+public class GeneralResultVo {
     private String author;
     private String desc;
     private String type;
