@@ -12,11 +12,14 @@
                                  download_urls,
                                  parse_status,
                                  error_msg,
-                                 create_time)
+                                 create_time,
+                                 user_id)
                                  values(#{awemeId}, #{title}, #{mediaType}, #{originUrl}, #{downloadUrls},
-                                 #{parseStatus}, #{errorMsg}, #{createTime})
+                                 #{parseStatus}, #{errorMsg}, #{createTime},#{userId})
     </insert>
     <select id="showHistory" resultType="com.taiyidu.taiyidu.gongsheng.pojo.vo.HistoryRecordVo">
-        select id, aweme_id, title, media_type, origin_url, create_time from log_download order by id
+        select id, aweme_id, title, media_type, origin_url, create_time , download_urls from log_download
+        where user_id = #{userId}
+        order by id
     </select>
 </mapper>

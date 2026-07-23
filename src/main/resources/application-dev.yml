@@ -1,0 +1,7 @@
+# 本地环境
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/gongsheng?useSSL=false&serverTimezone=Asia/Shanghai&characterEncoding=utf-8
+    username: root
+    password: 200710
+    driver-class-name: com.mysql.cj.jdbc.Driver

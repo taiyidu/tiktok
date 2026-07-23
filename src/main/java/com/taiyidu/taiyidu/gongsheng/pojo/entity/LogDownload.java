@@ -25,4 +25,5 @@ public class LogDownload {
     private Integer parseStatus;      // 解析状态: 1-成功, 0-失败
     private String errorMsg;          // 失败时的错误堆栈简要记录
     private LocalDateTime createTime; // 记录时间
+    private Long userId;
 }

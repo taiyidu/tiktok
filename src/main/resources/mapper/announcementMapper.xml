@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.taiyidu.taiyidu.gongsheng.mapper.announcementMapper">
+
+    <select id="getAnnouncement" resultType="com.taiyidu.taiyidu.gongsheng.pojo.entity.Announcement">
+        select * from announcement where id = 1
+    </select>
+</mapper>

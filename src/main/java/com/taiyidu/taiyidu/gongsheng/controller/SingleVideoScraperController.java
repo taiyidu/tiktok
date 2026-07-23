@@ -25,6 +25,7 @@ public class SingleVideoScraperController {
     }
     @GetMapping("/history")
     public Result history(){
+        log.info("[历史记录接口] 正在获取历史记录...");
         return Result.success(videoScraperService.showHistory());
     }
 }
