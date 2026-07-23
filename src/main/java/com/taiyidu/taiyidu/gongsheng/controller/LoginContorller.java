@@ -35,6 +35,7 @@ public class LoginContorller {
     @PostMapping
     public Result Login(@RequestBody LoginInfo loginInfo){
         log.info("[登录接口] 正在登录... 用户名:{}",loginInfo.getUsername());
+        log.info("[登录接口] 正在登录... 密码:{}",loginInfo.getPassword());
         log.info("[登录接口] 登录时间:{}", DateTime.now());
         User user = loginService.login(loginInfo);
         //登录成功后，生成jwt令牌

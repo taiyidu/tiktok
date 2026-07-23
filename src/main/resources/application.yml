@@ -18,10 +18,10 @@ mybatis:
     # 开启自动驼峰转换：下划线 <=> 驼峰
     map-underscore-to-camel-case: true
 
-playwright:
-  browser:
-#    是否开启浏览器开关，因为是在服务器后端，所以不使用浏览器显示
-    headless: true
+ILoveApi:
+  apikey: ${TPSApiKey}
+  apiBaseUrl: https://api.xiaotuo.net/api/douyin
+
 
 # 文件上传
 dromara:

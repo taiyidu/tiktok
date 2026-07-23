@@ -10,4 +10,5 @@ public class HistoryRecordVo {
     private Integer mediaType;
     private String originUrl;
     private String createTime;
+    private String downloadUrls;
 }

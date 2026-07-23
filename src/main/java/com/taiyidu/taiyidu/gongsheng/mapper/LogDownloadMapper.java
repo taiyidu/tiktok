@@ -10,5 +10,5 @@ import java.util.List;
 public interface LogDownloadMapper {
     void insert(LogDownload logDownload);
 
-    List<HistoryRecordVo> showHistory();
+    List<HistoryRecordVo> showHistory(Long userId);
 }
