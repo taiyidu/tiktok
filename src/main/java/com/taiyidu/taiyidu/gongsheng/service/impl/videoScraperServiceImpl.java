@@ -80,8 +80,7 @@ public class videoScraperServiceImpl implements videoScraperService {
             Response response = okHttpClient.newCall(request).execute();
             if (response.isSuccessful() && response.body() != null) {
                 String jsonResult = response.body().string();
-                log.info("apikey:  {}",apiKey);
-                log.info("接口返回的原始数据:{}" + jsonResult);
+//                log.info("接口返回的原始数据:{}" + jsonResult);
                 //获取作品类型判断
                 DouyinParseResp douyinParseResp = JSON.parseObject(jsonResult, new TypeReference<>() {});
 //                if(douyinParseResp.getData().isVideo()){
