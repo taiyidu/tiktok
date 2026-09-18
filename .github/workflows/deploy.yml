@@ -65,6 +65,7 @@ jobs:
             docker run -d -p 8080:8080 \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e TPSApiKey="$TPS_KEY" \
+            -e APPID="$APPID"\
             --network taiyidu \
             --restart always \
             --name gongsheng gongsheng:2.0
@@ -74,4 +75,4 @@ jobs:
 
         env:
             TPS_KEY: ${{ secrets.TPSAPIKEY }}
-            appid: ${{secrets.APPID}}
+            APPID: ${{secrets.APPID}}

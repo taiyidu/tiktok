@@ -17,7 +17,7 @@ mybatis:
 
 ILoveApi:
   apikey: ${TPSApiKey}
-  appid: ${appid}
+  appid: ${APPID}
   apiBaseUrl: https://qyapi.ipaybuy.cn/api/video
 
 gongsheng:
