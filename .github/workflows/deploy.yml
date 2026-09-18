@@ -50,7 +50,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT }}
-          envs: TPS_KEY,appid # 必须声明：把 env 里的变量注入给 SSH script
+          envs: TPS_KEY,APPID # 必须声明：把 env 里的变量注入给 SSH script
           script: |
             cd /usr/web/backend
             
@@ -65,7 +65,7 @@ jobs:
             docker run -d -p 8080:8080 \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e TPSApiKey="$TPS_KEY" \
-            -e APPID="$APPID"\
+            -e APPID="$APPID" \
             --network taiyidu \
             --restart always \
             --name gongsheng gongsheng:2.0
