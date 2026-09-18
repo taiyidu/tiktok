@@ -1,4 +1,5 @@
-FROM eclipse-temurin:21-jdk-jammy
+#FROM eclipse-temurin:21-jdk-jammy
+FROM ghcr.io/eclipse-temurin:21-jdk-jammy
 
 ENV TZ=Asia/Shanghai
 
