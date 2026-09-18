@@ -20,6 +20,6 @@
     <select id="showHistory" resultType="com.taiyidu.taiyidu.gongsheng.pojo.vo.HistoryRecordVo">
         select id, aweme_id, title, media_type, origin_url, create_time , download_urls from log_download
         where user_id = #{userId}
-        order by id
+        order by id desc
     </select>
 </mapper>

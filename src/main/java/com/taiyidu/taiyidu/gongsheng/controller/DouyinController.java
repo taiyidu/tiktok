@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/scraper/douyin")
 @Slf4j
-public class SingleVideoScraperController {
+public class DouyinController {
     @Autowired
     private videoScraperService videoScraperService;
     /**

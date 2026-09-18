@@ -1,6 +1,5 @@
 package com.taiyidu.taiyidu.gongsheng.controller;
 
-import cn.hutool.core.date.DateTime;
 import com.taiyidu.taiyidu.gongsheng.pojo.dto.LoginInfo;
 import com.taiyidu.taiyidu.gongsheng.pojo.entity.User;
 import com.taiyidu.taiyidu.gongsheng.pojo.vo.LoginResultVo;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +36,7 @@ public class LoginContorller {
     public Result Login(@RequestBody LoginInfo loginInfo){
         log.info("[登录接口] 正在登录... 用户名:{}",loginInfo.getUsername());
         log.info("[登录接口] 正在登录... 密码:{}",loginInfo.getPassword());
-        log.info("[登录接口] 登录时间:{}", DateTime.now());
+        log.info("[登录接口] 登录时间:{}", LocalDateTime.now());
         User user = loginService.login(loginInfo);
         //登录成功后，生成jwt令牌
         Map<String, Object> claims = new HashMap<>();

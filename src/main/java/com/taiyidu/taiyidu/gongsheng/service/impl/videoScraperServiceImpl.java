@@ -14,17 +14,21 @@ import com.taiyidu.taiyidu.gongsheng.pojo.vo.GeneralResultVo;
 import com.taiyidu.taiyidu.gongsheng.service.videoScraperService;
 import com.taiyidu.taiyidu.gongsheng.utils.SafeFileNameUtils;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import okhttp3.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
+import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -38,7 +42,8 @@ public class videoScraperServiceImpl implements videoScraperService {
     @Autowired
     private OkHttpClient okHttpClient;
 
-
+    @Value("${ILoveApi.appid}")
+    private String appId;
     @Value("${ILoveApi.apikey}")
     private String apikey;
     @Value("${ILoveApi.apiBaseUrl}")
@@ -46,7 +51,7 @@ public class videoScraperServiceImpl implements videoScraperService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public GeneralResultVo videoScraper(HeadRequest headRequest) {
-
+        //现在这里的次数的检测是只要点击就减少次数？ 但是我好像配置了transaction好像只要检测error就会回滚，所以说这里的问题并不大
         User user = userMapper.getById(BaseContext.getCurrentId());
         if(user.getRemain() <= 0){
             throw new BaseException("解析次数不够喽");
@@ -63,76 +68,58 @@ public class videoScraperServiceImpl implements videoScraperService {
             throw new BaseException("未在文案中找到有效的链接！");
         }
         log.info("提取的抖音短链接为：{}", targetUrl);
-        // 2. 配置你的“我爱API”接口信息 (这里以常见的接口参数格式为例，请替换为你实际使用的域名和Key)
+
+        String appId = this.appId;
         String apiBaseUrl = this.apiBaseUrl; // 示例接口
         String apiKey = this.apikey; // 替换为你的平台 Token/Key
 
-        // 3. 构建请求 URL（根据骁脱云文档，将参数拼接到 URL 后，或者用 POST 传参）
-        // 这里以最常见的 GET 请求传参为例：
-        String requestUrl = apiBaseUrl + "?apikey=" + apikey + "&url=" + java.net.URLEncoder.encode(targetUrl, java.nio.charset.StandardCharsets.UTF_8);
+        // 构造json参数map
+        Map<String, Object> reqBodyMap = new HashMap<>();
+        reqBodyMap.put("appId", this.appId);
+        reqBodyMap.put("appKey", this.apikey);
+        reqBodyMap.put("url", targetUrl);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonBody = objectMapper.writeValueAsString(reqBodyMap);
+
+        MediaType mediaType = MediaType.parse("application/json; charset=utf-8");
+        RequestBody body = RequestBody.create(mediaType, jsonBody);
+
         Request request = new Request.Builder()
-                .url(requestUrl)
-                .get()
-                .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
+                .url(apiBaseUrl)
+                .post(body)
                 .build();
         GeneralResultVo generalResultVo = new GeneralResultVo();
         try{
             Response response = okHttpClient.newCall(request).execute();
             if (response.isSuccessful() && response.body() != null) {
                 String jsonResult = response.body().string();
-//                log.info("接口返回的原始数据:{}" + jsonResult);
-                //获取作品类型判断
-                DouyinParseResp douyinParseResp = JSON.parseObject(jsonResult, new TypeReference<>() {});
-//                if(douyinParseResp.getData().isVideo()){
-//                    generalResultVo.setDesc(douyinParseResp.getData().getTitle());
-//                    generalResultVo.setAuthor(douyinParseResp.getData().getAuthor());
-//                    generalResultVo.setType("VIDEO");
-//                    generalResultVo.setDownloadUrl(douyinParseResp.getData().getUrl());
-//                    generalResultVo.setImagesList(null);
-//                }else{
-//                    generalResultVo.setDesc(douyinParseResp.getData().getTitle());
-//                    generalResultVo.setAuthor(douyinParseResp.getData().getAuthor());
-//                    generalResultVo.setType("IMAGES");
-//                    generalResultVo.setImagesList(new java.util.ArrayList<>());
-//                    douyinParseResp.getData().getImageList().forEach(image -> {
-//                        generalResultVo.getImagesList().add(image);
-//                    });
-//                }
-//                LogDownload logDownload = LogDownload.builder()
-//                        .awemeId(douyinParseResp.getData().getUid())
-//                        .title(douyinParseResp.getData().getTitle())
-//                        .mediaType(douyinParseResp.getData().isVideo() ? 1 : 2)
-//                        .originUrl(targetUrl)
-//                        .downloadUrls(douyinParseResp.getData().isVideo() ? douyinParseResp.getData().getUrl() : String.join(",", douyinParseResp.getData().getImageList()))
-//                        .parseStatus(1)
-//                        .errorMsg(null)
-//                        .createTime(LocalDateTime.now())
-//                        .userId(BaseContext.getCurrentId())
-//                        .build();
-//                logDownloadMapper.insert(logDownload);
-                DouyinData douyinData = douyinParseResp.getData();
-                if(douyinData.isVideo()){
+                log.info("接口返回的原始数据:{}" ,jsonResult);
+//                获取作品类型判断
+                DouyinParseResponse douyinParseResponse = JSON.parseObject(jsonResult, new TypeReference<>() {});
+                DouyinParseData douyinParseData = douyinParseResponse.getData();
+                if(douyinParseData.isVideo()){
                     //视频
-                    generalResultVo.setDesc(douyinData.getTitle());
-                    generalResultVo.setAuthor(douyinData.getAuthor());
                     generalResultVo.setType("VIDEO");
-                    generalResultVo.setDownloadUrl(douyinData.getUrl());
+                    generalResultVo.setDownloadUrl(douyinParseData.getVideo_url());
                     generalResultVo.setImagesList(null);
                 }else{
-                    generalResultVo.setDesc(douyinData.getTitle());
-                    generalResultVo.setAuthor(douyinData.getAuthor());
                     generalResultVo.setType("IMAGES");
                     generalResultVo.setImagesList(new java.util.ArrayList<>());
-                    douyinData.getImageList().forEach(image -> {
-                        generalResultVo.getImagesList().add(image);
+                    douyinParseData.getImages().forEach(image -> {
+                        generalResultVo.getImagesList().add(image.getUrl());
                     });
                 }
+                generalResultVo.setDesc(douyinParseData.getTitle());
+                generalResultVo.setAuthor(douyinParseData.getAuthor().getName());
+
+
                 LogDownload logDownload = LogDownload.builder()
-                        .awemeId(String.valueOf(douyinData.getUid()))
-                        .title(douyinData.getTitle())
-                        .mediaType(douyinData.isVideo() ? 1 : 2)
+                        .awemeId(String.valueOf(douyinParseData.getAuthor().getUid()))
+                        .title(douyinParseData.getTitle())
+                        .mediaType(douyinParseData.isVideo() ? 1 : 2)
                         .originUrl(targetUrl)
-                        .downloadUrls(douyinData.isVideo() ? douyinData.getUrl() : String.join(",", douyinData.getImageList()))
+                        .downloadUrls(douyinParseData.isVideo() ? douyinParseData.getVideo_url() : douyinParseData.getImages().stream().map(DouyinImage::getUrl).collect(Collectors.joining(",")))
                         .parseStatus(1)
                         .errorMsg(null)
                         .createTime(LocalDateTime.now())
@@ -140,11 +127,11 @@ public class videoScraperServiceImpl implements videoScraperService {
                         .build();
                 logDownloadMapper.insert(logDownload);
             } else {
-                log.info("服务器响应失败，状态码: " + response.code());
+                log.error("服务器响应失败，状态码: {}", response.code());
             }
         } catch (IOException e) {
-            log.error("网络请求发生异常: " + e.getMessage());
-            e.printStackTrace();
+            log.error("网络请求发生异常: {}", e.getMessage());
+//            e.printStackTrace();
             throw new BaseException("网络请求发生异常: " + e.getMessage());
         }
         return generalResultVo;
