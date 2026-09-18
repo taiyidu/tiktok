@@ -62,7 +62,7 @@ jobs:
             docker rm gongsheng || true
             
             # 运行新容器
-            docker run -d -p 8080:8080 \
+            docker run -d -p 80:8080 \
             -e SPRING_PROFILES_ACTIVE=prod \
             -e TPSApiKey="$TPS_KEY" \
             -e APPID="$APPID" \
