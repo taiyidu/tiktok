@@ -74,4 +74,4 @@ jobs:
 
         env:
             TPS_KEY: ${{ secrets.TPSAPIKEY }}
-            appid: ${secrets.APPID}
+            appid: ${{secrets.APPID}}
